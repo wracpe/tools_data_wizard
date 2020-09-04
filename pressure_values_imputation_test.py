@@ -31,14 +31,10 @@ fields_dict = dict()
 wells_total = list()
 
 for field in fields:
-    df = pd.read_csv(filepath_or_buffer=path / field / 'day.csv',
-                     sep=';',
-                     header=0,
-                     dtype={'A': str},
-                     parse_dates=[1],
-                     dayfirst=True,
-                     encoding='windows-1251',
-                     low_memory=False)
+    df = pd.read_excel(io=path / field / 'day.xlsx',
+                       header=0,
+                       dtype={0: str},
+                       parse_dates=[1])
 
     df.drop(columns=['Дебит жидкости (ТМ)',
                      'Дебит жидкости',
