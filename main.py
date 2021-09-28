@@ -1,13 +1,11 @@
+import datetime
 import math
 import pathlib
-
 import cufflinks as cf
 import numpy as np
 import pandas as pd
 import plotly as pl
 import plotly.graph_objects as go
-
-from datetime import timedelta
 from plotly import subplots
 
 from imputer import Imputer
@@ -32,53 +30,55 @@ features_num = 5
 fullness_min = 0.95
 drop_percent = 0.33
 cf.go_offline()
+
 path = pathlib.Path.cwd()
 path_data = path / 'data'
 path_results = path / 'results' / f'{estimator_name}_{target}'
+
 data = list()
 s_well_error = pd.Series(dtype=float)
 
 
-def read_chess(field: str) -> pd.DataFrame:
-    df = pd.read_csv(filepath_or_buffer=path_data / field / 'град_штр.csv',
-                     sep=';',
-                     dtype={0: str},
-                     parse_dates=[1],
-                     dayfirst=True,
-                     encoding='windows-1251')
+def convert_day_date(x: str) -> datetime.date:
+    return datetime.datetime.strptime(x, '%d.%m.%Y').date()
 
+
+def read_chess(field: str) -> pd.DataFrame:
+    df = pd.read_csv(
+        filepath_or_buffer=path_data / field / 'град_штр.csv',
+        sep=';',
+        dtype={0: str, 1: str},
+        encoding='windows-1251'
+    )
+    df['Дата'] = df['Дата'].apply(convert_day_date)
     drop_cols = [
+        'Активная мощность со счетчика (ТМ)',
+        'Давление в линии',
         'Давление в линии (нефт)',
-        'Давление на входе ЭЦН (ТМ)',
         'Давление на приеме насоса',
-        'Давление на БГ КНС',
-        'Давление на БГ куста / ГЗУ',
         'Дебит газа',
-        'Дебит газа (ТМ)',
-        'Дебит газа попутного',
-        'Дебит газлифтного газа',
-        'Дебит газового конденсата',
         'Дебит жидкости',
-        'Дебит жидкости (ТМ)',
-        'Дебит нефти (ТМ)',
-        'Дебит нефти расчетный',
-        'Дебит пластового газа',
-        'Дебит стабильного конденсата',
-        'Дебит сухого газа',
-        'Дебит сырого г/к',
-        'Масса реагента УДР (ТМ)',
+        'Загрузка ПЭД',
         'Напряжение BC (ТМ)',
         'Напряжение CA (ТМ)',
-        'Расход реагента УДР (ТМ), л/сут',
-        'Состояние УДР',
+        'Обводненность объемная',
+        'Приемистость ТМ',
+        'Приемистость исходная по ТМ',
+        'Приемистость сервисных служб',
+        'Приемистость среднесуточная',
+        'Сила тока ЭЦН',
+        'Сопротивление изоляции',
+        'Температура жидкости (ТМ)',
+        'Температура насоса ЭЦН (ТМ)',
+        'Температура ПЭД',
         'Ток фазы B (ТМ)',
         'Ток фазы C (ТМ)',
-        'Сила тока ЭЦН',
-        'Сила тока ЭЦН (ТМ)',
         'Удельный расход электроэнергии',
+        'Частота вращения ЭЦН',
+        'Частота тока ЭЦН (ТМ)',
+        'Электроэнергия (ТМ)',
     ]
     df.drop(columns=drop_cols, inplace=True)
-    df.dropna(axis='columns', how='all', inplace=True)
     return df
 
 
