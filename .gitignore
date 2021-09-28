@@ -1,6 +1,34 @@
-/.idea
-/.vscode
-/__pycache__
-*.csv
+### PyCharm ###
+
+.idea/
+
+### VisualStudioCode ###
+
+.vscode/
+
+### JupyterNotebooks ###
+
+.ipynb_checkpoints
+
+### Python ###
+
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Environments
+venv/
+
+### Data ###
+
+# I/O
+*.feather
 *.xlsx
+*.png
 *.html
+
+results_old_git_2021_09_28/
