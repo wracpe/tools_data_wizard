@@ -311,10 +311,10 @@ class _ImputerByWellSh(object):
             (self._df_stop['dtend'] > date_min)
         ]
         if not df_stop.empty:
-            if df_stop.iloc[0, 1] < date_min:
-                df_stop.iloc[0, 1] = date_min  # Изменение dtstart.
-            if df_stop.iloc[-1, 2] > date_max:
-                df_stop.iloc[-1, 2] = date_max  # Изменение dtend.
+            if df_stop['dtstart'].iloc[0] < date_min:
+                df_stop['dtstart'].iloc[0] = date_min  # Изменение dtstart.
+            if df_stop['dtend'].iloc[-1] > date_max:
+                df_stop['dtend'].iloc[-1] = date_max  # Изменение dtend.
         df_merop = self._df_merop.loc[date_min:date_max]
         return df_sh, df_stop, df_merop
 
