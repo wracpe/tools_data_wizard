@@ -18,6 +18,34 @@ warnings.filterwarnings('ignore')
 
 
 class Imputer(object):
+    """Класс, содержащий логику заполнения пропусков в данных дебита и давления.
+
+    Класс предназначен для заполнения пропусков в суточных временных данных
+    конкретной нефтяной или нагнетательной скважины месторождения. Класс
+    работает с набором данных папки data в корне проекта.
+
+    Parameters
+    ----------
+    field_name: str
+        Наименование месторождения. Должно соответствовать наименованию папки,
+        содержащей все необходимые данные по месторождению.
+
+    year_month_start_sh: tuple[int, int]
+        Год и месяц начальной даты в таблице данных sh.
+
+    year_month_end: tuple[int, int]
+        Год и месяц последней даты во всех таблицах данных. Все таблицы должны
+        быть согласованы по последней дате.
+
+    estimator_name: {"ela", "knn", "tree"}
+        Наименование модели, используемой для заполнения пропусков.
+
+    References
+    ----------
+
+    .. [1] https://scikit-learn.org/stable/modules/generated/sklearn.impute.IterativeImputer.html
+
+    """
 
     _path_general = pathlib.Path.cwd() / 'data'
     _fonds = [
@@ -61,6 +89,7 @@ class Imputer(object):
             self._path_imputation_plots.mkdir(parents=False)
 
     def _read_fond_sost_merop_sh(self) -> None:
+        """Читает все необходимые для расчета входные таблицы данных."""
         self._df_fond = pd.read_feather(self._path_current / 'fond.feather')
         self._df_sost = pd.read_feather(self._path_current / 'sost.feather')
         self._df_merop = pd.read_feather(self._path_current / 'merop.feather')
@@ -68,6 +97,11 @@ class Imputer(object):
         self._check_sh()
 
     def _check_sh(self) -> None:
+        """Проверяет соответствие входных дат наименовнию папки с данными.
+
+        Проверяются даты, поданные в конструктор класса (кортежи год, дата), и
+        наименование папки внутри папки месторождения на соответсвтие.
+        """
         dates_sh = self._df_sh['dt']
         self._date_sh_min = min(dates_sh)
         self._date_sh_max = max(dates_sh)
@@ -77,6 +111,7 @@ class Imputer(object):
             raise AssertionError('Min и max даты таблицы sh не соответсвтуют названию папки.')
 
     def _crop_fond_sost_merop(self) -> None:
+        """Приводит все таблицы к одним датам."""
         self._df_fond = self._crop_specific(self._df_fond, 'fond')
         self._df_sost = self._crop_specific(self._df_sost, 'sost')
         self._df_merop = self._df_merop.loc[
@@ -103,6 +138,11 @@ class Imputer(object):
         return df
 
     def _select_well_names_to_impute(self) -> None:
+        """Выбирает номера скважин месторождения для заполнения.
+
+        Проверяется наличие данных скважины в таблице sh, ее состояние в таблице
+        sost, ее фонд в таблице fond.
+        """
         well_names_by_sh = self._df_sh['well.ois'].unique()
         well_names_by_sost = self._df_sost.loc[self._df_sost['sost'].isin(self._sosts)]['well.ois'].unique()
         self._df_fond = self._df_fond.loc[
