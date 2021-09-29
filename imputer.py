@@ -94,10 +94,10 @@ class Imputer(object):
         else:
             for well_name in df['well.ois'].unique():
                 df_well = df.loc[df['well.ois'] == well_name]
-                if df_well.iloc[0, 2] < self._date_sh_min:
-                    df_well.iloc[0, 2] = self._date_sh_min  # Изменение dtstart.
-                if df_well.iloc[-1, 3] > self._date_sh_max:
-                    df_well.iloc[-1, 3] = self._date_sh_max  # Изменение dtend.
+                if df_well['dtstart'].iloc[0] < self._date_sh_min:
+                    df_well['dtstart'].iloc[0] = self._date_sh_min  # Изменение dtstart.
+                if df_well['dtend'].iloc[-1] > self._date_sh_max:
+                    df_well['dtend'].iloc[-1] = self._date_sh_max  # Изменение dtend.
                 df.update(df_well)
             df['well.ois'] = df['well.ois'].astype('int64')
         return df
