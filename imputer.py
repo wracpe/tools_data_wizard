@@ -97,10 +97,10 @@ class Imputer(object):
         self._check_sh()
 
     def _check_sh(self) -> None:
-        """Проверяет соответствие входных дат наименовнию папки с данными.
+        """Проверяет соответствие входных дат наименованию папки с данными.
 
         Проверяются даты, поданные в конструктор класса (кортежи год, дата), и
-        наименование папки внутри папки месторождения на соответсвтие.
+        наименование папки внутри папки месторождения на соответствие.
         """
         dates_sh = self._df_sh['dt']
         self._date_sh_min = min(dates_sh)
@@ -108,7 +108,7 @@ class Imputer(object):
         date_sh_min_str = f'{self._date_sh_min.year}_{self._date_sh_min.month}'
         date_sh_max_str = f'{self._date_sh_max.year}_{self._date_sh_max.month}'
         if self._folder_name != f'{date_sh_min_str}_{date_sh_max_str}':
-            raise AssertionError('Min и max даты таблицы sh не соответсвтуют названию папки.')
+            raise AssertionError('Min и max даты таблицы sh не соответствуют названию папки.')
 
     def _crop_fond_sost_merop(self) -> None:
         """Приводит все таблицы к одним датам."""
@@ -144,7 +144,7 @@ class Imputer(object):
         sost, ее фонд в таблице fond.
         """
         well_names_by_sh = self._df_sh['well.ois'].unique()
-        well_names_by_sost = self._df_sost.loc[self._df_sost['sost'].isin(self._sosts)]['well.ois'].unique()
+        well_names_by_sost = self._df_sost.loc[self._df_sost['ssid.name'].isin(self._sosts)]['well.ois'].unique()
         self._df_fond = self._df_fond.loc[
             (self._df_fond['charwork.name'].isin(self._fonds)) &
             (self._df_fond['well.ois'].isin(sorted(set(well_names_by_sh) & set(well_names_by_sost))))
@@ -207,11 +207,11 @@ class _ImputerByWellSh(object):
         self._df_fond = df_fond.loc[df_fond['well.ois'] == self.well_name]
         self._df_work = df_sost.loc[
             (df_sost['well.ois'] == self.well_name) &
-            (df_sost['sost'].isin(sosts))
+            (df_sost['ssid.name'].isin(sosts))
         ]
         self._df_stop = df_sost.loc[
             (df_sost['well.ois'] == self.well_name) &
-            (~df_sost['sost'].isin(sosts))
+            (~df_sost['ssid.name'].isin(sosts))
         ]
         self._df_fond.drop(columns='well.ois', inplace=True)
         self._df_work.drop(columns='well.ois', inplace=True)
@@ -266,7 +266,7 @@ class _ImputerByWellSh(object):
                     self._estimator_name,
                 )
             except Exception as exc:
-                self.df_sh.loc[dates_sh_work_fond, 'sost'] = 'Остновлена'
+                self.df_sh.loc[dates_sh_work_fond, 'sost'] = 'Остановлена'
                 print(exc)
                 print('Расчет по периоду пропущен. Состояние по скважине изменено на "Остановлена".')
                 continue
