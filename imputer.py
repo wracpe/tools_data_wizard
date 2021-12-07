@@ -385,13 +385,16 @@ class _ImputerByWellShWorkFond(object):
             ),
         'tree':
             ExtraTreesRegressor(
+                n_estimators=10,
+                max_depth=5,
+                max_features='sqrt',
                 n_jobs=-1,
                 random_state=1,
             ),
     }
-    _nan_percent = 0.75
-    _corr_value = 0.5
-    _max_features = 5
+    _nan_percent = 0.8
+    _corr_value = 0.3
+    _max_features = 10
 
     def __init__(
             self,
@@ -412,7 +415,7 @@ class _ImputerByWellShWorkFond(object):
         estimator = self._estimators[self.estimator_name]
         self._imputer = IterativeImputer(
             estimator,
-            max_iter=100,
+            max_iter=1000,
             initial_strategy='median',
             imputation_order='ascending',
             skip_complete=True,
@@ -429,7 +432,7 @@ class _ImputerByWellShWorkFond(object):
         df_features = self.df.drop(columns=self.targets).dropna(axis=1, thresh=self._k)
         df_rank = pd.DataFrame(index=df_features.columns, columns=self.targets)
         for target in self.targets:
-            df_rank[target] = abs(df_features.corrwith(self.df[target], drop=True, method='pearson'))
+            df_rank[target] = abs(df_features.corrwith(self.df[target], drop=True, method='kendall'))
         s_rank = df_rank.max(axis=1)
         s_rank = s_rank.loc[s_rank > self._corr_value].sort_values(ascending=False).head(self._max_features)
         self.features = s_rank.index.to_list()
@@ -437,6 +440,8 @@ class _ImputerByWellShWorkFond(object):
     def _impute_by_estimator(self) -> None:
         self.params = self.targets + self.features
         df = self.df[self.params]
+        # TODO: Проверить необходимость простой интерполяции перед заполнением основным методом.
+        df.interpolate(axis=0, limit=7, inplace=True, limit_direction='both')
         mx = self._imputer.fit_transform(df)
         self.df[df.columns] = pd.DataFrame(data=mx, index=df.index, columns=df.columns)
 
