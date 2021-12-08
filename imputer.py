@@ -124,6 +124,7 @@ class Imputer(object):
             (df['dtstart'] < self._date_sh_max) &
             (df['dtend'] > self._date_sh_min)
         ]
+        df.dropna(inplace=True)  # TODO: Проверить необходимость данной процедуры.
         if df.empty:
             raise AssertionError(f'Таблица {df_name} не соответствует таблице sh по датам.')
         else:
