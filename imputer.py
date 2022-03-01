@@ -161,8 +161,8 @@ class Imputer(object):
 
     def _impute_save(self) -> None:
         dfs = []
-        for well_name in self._well_names:
-            print(well_name)
+        for ind, well_name in enumerate(self._well_names):
+            print(f'{ind} out of {len(self._well_names)}:', well_name)
             try:
                 imputer = _ImputerByWellSh(
                     well_name,
