@@ -1,7 +1,8 @@
 import time
-
+from loguru import logger
 from imputer import Imputer
 
+logger.add('log.log', level='DEBUG', format="{time:HH:mm:ss} {level} {message}")
 
 # Наименования месторождений для расчета.
 # Должны быть согласованы с наименованием папок по месторождениям в data.
@@ -9,8 +10,11 @@ from imputer import Imputer
 field_names = [
     # 'Валынтойское',
     # 'Вынгаяхинское',
+    # 'Вынгапуровское',
     # 'Западно-Чатылькинское',
     'Крайнее',
+    # 'Новопортовское',
+    # 'Оренбургское',
     # 'Отдельное',
     # 'Романовское',
     # 'Холмистое',
@@ -28,7 +32,7 @@ year_month_end = (2021, 8)
 
 for field_name in field_names:
     time_start = time.time()
-    print(f'Старт расчета для месторождения "{field_name}".')
+    logger.info(f'Старт расчета для месторождения "{field_name}".')
     try:
         Imputer(
             field_name,
@@ -42,4 +46,5 @@ for field_name in field_names:
         continue
     else:
         run_time = round((time.time() - time_start) / 60, 1)
-        print(f'Время выполнения: {run_time} мин.')
+        logger.success(f'Время выполнения: {run_time} мин.')
+    logger.success([f'Конец расчета для месторождения "{field_name}".', counter])

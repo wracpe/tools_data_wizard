@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import plotly as pl
 import plotly.graph_objects as go
+from loguru import logger
 from plotly.subplots import make_subplots
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.experimental import enable_iterative_imputer
@@ -68,6 +69,7 @@ class Imputer(object):
         self._field_name = field_name
         self._folder_name = '%s_%s_%s_%s' % (year_month_start_sh + year_month_end)
         self._estimator_name = estimator_name
+        self._counter = {}
         self._run()
 
     def _run(self) -> None:
@@ -108,6 +110,8 @@ class Imputer(object):
         date_sh_min_str = f'{self._date_sh_min.year}_{self._date_sh_min.month}'
         date_sh_max_str = f'{self._date_sh_max.year}_{self._date_sh_max.month}'
         if self._folder_name != f'{date_sh_min_str}_{date_sh_max_str}':
+            logger.error('Min и max даты таблицы sh не соответствуют названию папки.')
+            logger.error([self._field_name, date_sh_min_str, date_sh_max_str])
             raise AssertionError('Min и max даты таблицы sh не соответствуют названию папки.')
 
     def _crop_fond_sost_merop(self) -> None:
@@ -161,8 +165,9 @@ class Imputer(object):
 
     def _impute_save(self) -> None:
         dfs = []
+        dfs_origin = []
         for ind, well_name in enumerate(self._well_names):
-            print(f'{ind} out of {len(self._well_names)}:', well_name)
+            logger.info(f'{ind} out of {len(self._well_names)}: {well_name}')
             try:
                 imputer = _ImputerByWellSh(
                     well_name,
@@ -173,14 +178,22 @@ class Imputer(object):
                     self._df_merop,
                     self._df_sh,
                     self._sosts,
+                    self._counter
                 )
                 dfs.append(imputer.df_sh)
+                dfs_origin.append(imputer.df_sh_origin)
             except Exception as exc:
-                print(exc)
+                logger.exception(exc)
+                logger.info([self._field_name, len(self._well_names), self._counter])
                 continue
         self._df_sh_sost_fond = pd.concat(objs=dfs, ignore_index=True)
         self._df_sh_sost_fond.fillna(value=np.nan, inplace=True)
         self._df_sh_sost_fond.to_feather(f'{self._path_current}\\sh_sost_fond.feather')
+        self._df_sh_sost_fond.to_excel(f'{self._path_current}\\sh_sost_fond.xlsx', engine='openpyxl')
+
+        df_sh_sost_fond_origin = pd.concat(objs=dfs_origin, ignore_index=True)
+        df_sh_sost_fond_origin.fillna(value=np.nan, inplace=True)
+        df_sh_sost_fond_origin.to_excel(f'{self._path_current}\\sh_sost_fond_origin.xlsx', engine='openpyxl')
 
 
 class _ImputerByWellSh(object):
@@ -195,7 +208,9 @@ class _ImputerByWellSh(object):
             df_merop: pd.DataFrame,
             df_sh: pd.DataFrame,
             sosts: List[str],
+            counter
     ):
+        self._counter = counter
         self.well_name = well_name
         self._estimator_name = estimator_name
         self._path_imputation_plots = path_imputation_plots
@@ -259,6 +274,7 @@ class _ImputerByWellSh(object):
             dates_sh_work_fond = sorted(set(self._dates_sh_work) & set(dates_fond))
             df_sh_work_fond = self._df_sh_copy.loc[dates_sh_work_fond]
             self.df_sh.loc[dates_fond, 'charwork.name'] = fond_name
+            self.df_sh_origin = self.df_sh.copy()
             try:
                 targets = self._get_check_targets(fond_name, df_sh_work_fond)
                 imputer = _ImputerByWellShWorkFond(
@@ -291,6 +307,11 @@ class _ImputerByWellSh(object):
         for target in targets:
             s_target = df_sh_work_fond[target].dropna()
             if s_target.empty:
+                if target not in self._counter.keys():
+                    self._counter[target] = 1
+                else:
+                    self._counter[target] += 1
+                logger.error(f'Нет значений по "{target}" с {dates[0]} по {dates[-1]}.')
                 raise AssertionError(f'Нет значений по "{target}" с {dates[0]} по {dates[-1]}.')
 
         if fond_name == 'Нефтяные':
@@ -323,6 +344,10 @@ class _ImputerByWellSh(object):
         self.df_sh.reset_index(drop=False, inplace=True)
         self.df_sh['well.ois'] = self.well_name
         self.df_sh['Давление забойное'] = self.df_sh[self._get_bhp(self.df_sh)]
+
+        self.df_sh_origin.reset_index(drop=False, inplace=True)
+        self.df_sh_origin['well.ois'] = self.well_name
+        self.df_sh_origin['Давление забойное'] = self.df_sh_origin[self._get_bhp(self.df_sh_origin)]
         cols_to_use = [
             'dt',
             'well.ois',
@@ -336,6 +361,7 @@ class _ImputerByWellSh(object):
         for fond_name in targets_rate.keys():
             cols_to_use.extend(targets_rate[fond_name])
         self.df_sh = self.df_sh[cols_to_use]
+        self.df_sh_origin = self.df_sh_origin[cols_to_use]
 
     def _get_bhp(self, df: pd.DataFrame) -> str:
         targets_bhp = self._get_targets_bhp_as_dict()
@@ -357,6 +383,9 @@ class _ImputerByWellSh(object):
             'Нефтяные': [
                 'Дебит жидкости среднесуточный',
                 'Дебит нефти расчетный',
+                'Газовый фактор рабочий (ТМ)',
+                'Дебит газа (ТМ)',
+                'Дебит газа попутного',
             ],
             'Нагнетательные': [
                 'Приемистость среднесуточная',
@@ -482,7 +511,7 @@ class _PlotterByImputation(object):
         ))
         self._set_file_name()
         self._create_shrunk_chess_plot()
-        self._create_extend_chess_plot()
+        # self._create_extend_chess_plot()
 
     def _set_file_name(self) -> None:
         self._file_name = f'{self._path}\\{self._well_name}_{self._fond_name}'
