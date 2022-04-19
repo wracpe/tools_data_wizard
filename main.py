@@ -34,7 +34,7 @@ for field_name in field_names:
     time_start = time.time()
     logger.info(f'Старт расчета для месторождения "{field_name}".')
     try:
-        Imputer(
+        imp = Imputer(
             field_name,
             year_month_start_sh,
             year_month_end,
@@ -47,4 +47,4 @@ for field_name in field_names:
     else:
         run_time = round((time.time() - time_start) / 60, 1)
         logger.success(f'Время выполнения: {run_time} мин.')
-    logger.success([f'Конец расчета для месторождения "{field_name}".', counter])
+    logger.success([f'Конец расчета для месторождения "{field_name}".', imp.counter])

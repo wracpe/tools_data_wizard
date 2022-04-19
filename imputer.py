@@ -14,7 +14,6 @@ from sklearn.linear_model import ElasticNet
 from sklearn.neighbors import KNeighborsRegressor
 from typing import Dict, List, Tuple
 
-
 warnings.filterwarnings('ignore')
 
 
@@ -194,6 +193,10 @@ class Imputer(object):
         df_sh_sost_fond_origin = pd.concat(objs=dfs_origin, ignore_index=True)
         df_sh_sost_fond_origin.fillna(value=np.nan, inplace=True)
         df_sh_sost_fond_origin.to_excel(f'{self._path_current}\\sh_sost_fond_origin.xlsx', engine='openpyxl')
+
+    @property
+    def counter(self):
+        return self._counter
 
 
 class _ImputerByWellSh(object):
@@ -511,7 +514,7 @@ class _PlotterByImputation(object):
         ))
         self._set_file_name()
         self._create_shrunk_chess_plot()
-        # self._create_extend_chess_plot()
+        self._create_extend_chess_plot()
 
     def _set_file_name(self) -> None:
         self._file_name = f'{self._path}\\{self._well_name}_{self._fond_name}'

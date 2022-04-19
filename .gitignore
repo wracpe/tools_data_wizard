@@ -30,5 +30,6 @@ venv/
 *.xlsx
 *.png
 *.html
+*.log
 
 results_old_git_2021_09_28/
