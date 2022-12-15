@@ -56,6 +56,7 @@ class Imputer(object):
         'В работе',
         'Освоение прошлых лет',
         'Освоение текущего года',
+        'В накоплении/под циклической закачкой/'
     ]
 
     def __init__(
@@ -188,11 +189,11 @@ class Imputer(object):
         self._df_sh_sost_fond = pd.concat(objs=dfs, ignore_index=True)
         self._df_sh_sost_fond.fillna(value=np.nan, inplace=True)
         self._df_sh_sost_fond.to_feather(f'{self._path_current}\\sh_sost_fond.feather')
-        self._df_sh_sost_fond.to_excel(f'{self._path_current}\\sh_sost_fond.xlsx', engine='openpyxl')
+        # self._df_sh_sost_fond.to_excel(f'{self._path_current}\\sh_sost_fond.xlsx', engine='openpyxl')
 
         df_sh_sost_fond_origin = pd.concat(objs=dfs_origin, ignore_index=True)
         df_sh_sost_fond_origin.fillna(value=np.nan, inplace=True)
-        df_sh_sost_fond_origin.to_excel(f'{self._path_current}\\sh_sost_fond_origin.xlsx', engine='openpyxl')
+        # df_sh_sost_fond_origin.to_excel(f'{self._path_current}\\sh_sost_fond_origin.xlsx', engine='openpyxl')
 
     @property
     def counter(self):
@@ -292,14 +293,14 @@ class _ImputerByWellSh(object):
                 continue
             else:
                 df_sh, df_stop, df_merop = self._prepare_plotter_data(dates_sh_work_fond)
-                _PlotterByImputation(
-                    self.well_name,
-                    fond_name,
-                    imputer,
-                    df_sh,
-                    df_stop,
-                    self._path_imputation_plots,
-                )
+                # _PlotterByImputation(
+                #     self.well_name,
+                #     fond_name,
+                #     imputer,
+                #     df_sh,
+                #     df_stop,
+                #     self._path_imputation_plots,
+                # )
                 self._imputers_fonds[fond_name] = imputer
                 self.df_sh.update(imputer.df)
 
@@ -386,9 +387,9 @@ class _ImputerByWellSh(object):
             'Нефтяные': [
                 'Дебит жидкости среднесуточный',
                 'Дебит нефти расчетный',
-                'Газовый фактор рабочий (ТМ)',
-                'Дебит газа (ТМ)',
-                'Дебит газа попутного',
+                # 'Газовый фактор рабочий (ТМ)',
+                # 'Дебит газа (ТМ)',
+                # 'Дебит газа попутного',
             ],
             'Нагнетательные': [
                 'Приемистость среднесуточная',
@@ -503,7 +504,7 @@ class _PlotterByImputation(object):
         self._df_sh = df_sh
         self._df_stop = df_stop
         self._path = str(path_imputation_plots)
-        self._run()
+        # self._run()
 
     def _run(self) -> None:
         self._figure = go.Figure(layout=go.Layout(
@@ -525,7 +526,7 @@ class _PlotterByImputation(object):
 
     def _create_extend_chess_plot(self) -> None:
         fig = self._create_subplot_figure(self._imputer.params)
-        pl.io.write_html(fig, f'{self._file_name}.html', auto_open=False)
+        # pl.io.write_html(fig, f'{self._file_name}.html', auto_open=False)
 
     def _create_subplot_figure(self, cols: List[str]) -> go.Figure:
         n_params = len(cols)
